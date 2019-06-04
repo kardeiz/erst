@@ -1,0 +1,27 @@
+ws = _{ " "|"\t"|"\n"|"\r" }
+
+code_start = _{ "<%" }
+code_start_no_leading_ws = _{ ws* ~ "<%-" }
+expr_start = _{ "<%=" }
+code_end = _{ "%>" }
+code_end_no_trailing_ws = _{ "-%>" ~ ws* }
+
+code_content = { ( !(code_end) ~ !(code_end_no_trailing_ws) ~ ANY)* }
+
+code = !{
+	(code_start | code_start_no_leading_ws)
+	~ code_content
+	~ (code_end | code_end_no_trailing_ws)
+}
+
+expr = !{
+	expr_start 
+	~ code_content 
+	~ ( code_end | code_end_no_trailing_ws)
+}
+
+text = ${ (!(code_start) ~ !(expr_start) ~ !(code_start_no_leading_ws) ~ ANY)+ }
+
+content = _{ expr | code | text }
+
+template = _{ SOI ~ content* ~ EOI }

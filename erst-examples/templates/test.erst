@@ -1,0 +1,6 @@
+Hi
+<ul>
+	<% for x in &self.collection { -%>
+		<li><%= x %></li>
+	<%- } %>
+</ul>

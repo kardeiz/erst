@@ -1,0 +1,8 @@
+[package]
+name = "erst-dynamic"
+version = "0.1.0"
+authors = ["Jacob Brown <kardeiz@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+erst-shared = { path = "../erst-shared", version = "0.1.0" }

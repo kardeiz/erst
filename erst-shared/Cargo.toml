@@ -1,0 +1,12 @@
+[package]
+name = "erst-shared"
+version = "0.1.0"
+authors = ["Jacob Brown <kardeiz@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+pest = "2.1.1"
+pest_derive = "2.1.0"
+syn = "0.15.34"
+quote = "0.6.12"
+derive_more = "0.14.1"
