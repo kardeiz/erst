@@ -1,13 +1,12 @@
 [package]
 name = "erst"
-version = "0.1.0"
-authors = ["jacob"]
+version = "0.2.0"
+authors = ["Jacob Brown <kardeiz@gmail.com>"]
 edition = "2018"
 readme = "README.md"
 license = "MIT"
 description = "Embedded Rust"
 [dependencies]
 
-erst-derive = { path = "erst-derive", version = "0.1.0" }
-erst-shared = { path = "erst-shared", version = "0.1.0" }
-erst-dynamic = { path = "erst-dynamic", version = "0.1.0" }
+erst-derive = { path = "erst-derive", version = "0.2.0" }
+erst-shared = { path = "erst-shared", version = "0.2.0" }

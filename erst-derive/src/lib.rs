@@ -94,8 +94,6 @@ fn parse(template: &str, type_: &str) -> Result<String, Box<std::error::Error>> 
 
 	let pairs = ErstParser::parse(erst_shared::parser::Rule::template, template)?;
 
-	// panic!("{:#?}", &pairs);
-
 	let mut buffer = String::new();
 
 	for pair in pairs {

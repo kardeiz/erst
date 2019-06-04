@@ -1,6 +1,5 @@
 pub use erst_derive::Template;
 pub use erst_shared::err;
-pub use erst_dynamic as dynamic;
 
 use std::fmt::{Display, Write};
 
