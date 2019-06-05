@@ -41,3 +41,4 @@ And then call it like:
 
     ERST_TEMPLATES_DIR=/path/to/folder-containing-simple-erst cargo run
 
+By default, the template's `path` will resolve to a file inside a `templates` directory in the current project context (i.e., `CARGO_MANIFEST_DIR`).
