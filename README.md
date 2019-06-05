@@ -42,3 +42,5 @@ And then call it like:
     ERST_TEMPLATES_DIR=/path/to/folder-containing-simple-erst cargo run
 
 By default, the template's `path` will resolve to a file inside a `templates` directory in the current project context (i.e., `CARGO_MANIFEST_DIR`).
+
+Currently, only the `html` type (or none) is supported, with very basic HTML escaping. To unescape HTML content in your template file, wrap the content in `erst::Raw("<p>Hello</p>")`.
