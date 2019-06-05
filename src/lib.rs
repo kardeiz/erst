@@ -1,10 +1,9 @@
 pub use erst_derive::Template;
-pub use erst_shared::err;
 
 use std::fmt::{Display, Write};
 
 pub trait Template {
-    fn render_into(&self, writer: &mut std::fmt::Write) -> err::Result<()>;
+    fn render_into(&self, writer: &mut std::fmt::Write) -> std::fmt::Result;
 }
 
 pub struct Html<T>(pub T);

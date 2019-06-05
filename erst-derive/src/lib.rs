@@ -8,7 +8,6 @@ extern crate syn;
 
 use proc_macro::TokenStream;
 
-use std::fmt::Write;
 use std::path::PathBuf;
 
 #[proc_macro_derive(Template, attributes(template))]
@@ -82,7 +81,7 @@ fn template_derive_inner(input: syn::DeriveInput) -> Result<TokenStream, Box<std
         pub const #body_marker: () = { include_str!(#path_display); };
 
         impl #impl_generics erst::Template for #name #ty_generics #where_clause {
-            fn render_into(&self, writer: &mut std::fmt::Write) -> erst::err::Result<()> {
+            fn render_into(&self, writer: &mut std::fmt::Write) -> std::fmt::Result {
                 use std::fmt::Write;
                 let __erst_buffer = writer;
                 #(#stmts)*

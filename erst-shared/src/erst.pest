@@ -9,7 +9,7 @@ code_end_no_trailing_ws = _{ "-%>" ~ ws* }
 code_content = { ( !(code_end) ~ !(code_end_no_trailing_ws) ~ ANY)* }
 
 code = !{
-	(code_start | code_start_no_leading_ws)
+	(code_start_no_leading_ws | code_start)
 	~ code_content
 	~ (code_end | code_end_no_trailing_ws)
 }

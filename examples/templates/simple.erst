@@ -1,0 +1,12 @@
+<div>
+    <p>Hello!</p>
+    <%
+        let desc = format!("Here is your list of {} items:", self.collection.len());
+    -%>
+    <p><%= desc %></p>
+    <ul>
+    	<% for x in &self.collection { -%>
+    		<li><%= x %></li>      
+    	<%- } %>
+    </ul>
+</div>
