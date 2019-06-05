@@ -43,4 +43,6 @@ And then call it like:
 
 By default, the template's `path` will resolve to a file inside a `templates` directory in the current project context (i.e., `CARGO_MANIFEST_DIR`).
 
+Note that, unlike `Askama` and other template systems, you need to reference any struct members with `self`. The template file is basically a function that takes `&self` (where `self` is the linked container object).
+
 Currently, only the `html` type (or none) is supported, with very basic HTML escaping. To unescape HTML content in your template file, wrap the content in `erst::Raw("<p>Hello</p>")`.
