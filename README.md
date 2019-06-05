@@ -4,7 +4,7 @@ A tiny library for creating string templates, similar to ERB and JSP (angle-brac
 
 Precompiled along the lines of [Askama](https://github.com/djc/askama).
 
-##Usage:
+## Usage:
 
 ```rust
 use erst::Template;
