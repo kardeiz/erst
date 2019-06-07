@@ -8,7 +8,7 @@ extern crate syn;
 
 use proc_macro::TokenStream;
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 #[proc_macro_derive(Template, attributes(template))]
 pub fn template_derive(input: TokenStream) -> TokenStream {
@@ -57,28 +57,34 @@ fn template_derive_inner(input: syn::DeriveInput) -> Result<TokenStream, Box<std
 
     let type_ = type_.as_ref().map(|x| x.as_str()).unwrap_or_else(|| "");
 
-    let path = std::env::var("ERST_TEMPLATES_DIR")
-        .map(PathBuf::from)
-        .or_else(|_| {
-            std::env::var("CARGO_MANIFEST_DIR").map(|x| PathBuf::from(x).join("templates"))
-        })?
-        .join(path.ok_or_else(|| "No path given")?);
+    let path = path.ok_or_else(|| "No path given")?;
 
-    let body = std::fs::read_to_string(&path)?;
+    let full_path = erst_shared::utils::templates_dir()?.join(&path);
 
-    let body = format!("{{ {} }}", parse(&body, type_)?);
+    let body = std::fs::read_to_string(&full_path)?;
+
+    let body = parse(&full_path.display().to_string(), &body, type_)?;
+
+    let body = format!("{{ {} }}", body);
 
     let block = syn::parse_str::<syn::Block>(&body)?;
 
     let stmts = &block.stmts;
 
-    let body_marker =
-        syn::Ident::new(&format!("__ERST_BODY_MARKER_{}", &name), proc_macro2::Span::call_site());
-    let path_display = path.display().to_string();
+    let template_marker = if cfg!(feature = "dynamic") {
+        quote!()
+    } else {
+        let path_display = full_path.display().to_string();
+        let template_marker = syn::Ident::new(
+            &format!("__ERST_TEMPLATE_MARKER_{}", &name),
+            proc_macro2::Span::call_site(),
+        );
+        quote!(pub const #template_marker: () = { include_str!(#path_display); };)
+    };
 
     let out = quote! {
 
-        pub const #body_marker: () = { include_str!(#path_display); };
+        #template_marker
 
         impl #impl_generics erst::Template for #name #ty_generics #where_clause {
             fn render_into(&self, writer: &mut std::fmt::Write) -> std::fmt::Result {
@@ -99,7 +105,8 @@ fn template_derive_inner(input: syn::DeriveInput) -> Result<TokenStream, Box<std
     Ok(out.into())
 }
 
-fn parse(template: &str, type_: &str) -> Result<String, Box<std::error::Error>> {
+#[cfg(not(feature = "dynamic"))]
+fn parse(_: &str, template: &str, type_: &str) -> Result<String, Box<std::error::Error>> {
     use erst_shared::{
         exp::Parser as _,
         parser::{ErstParser, Rule},
@@ -112,7 +119,8 @@ fn parse(template: &str, type_: &str) -> Result<String, Box<std::error::Error>> 
     for pair in pairs {
         match pair.as_rule() {
             Rule::code => {
-                buffer.push_str(pair.into_inner().as_str());
+                let inner = pair.into_inner();
+                buffer.push_str(inner.as_str());
             }
             Rule::expr => match type_ {
                 "html" => {
@@ -129,7 +137,53 @@ fn parse(template: &str, type_: &str) -> Result<String, Box<std::error::Error>> 
                 }
             },
             Rule::text => {
-                buffer.push_str(&format!("write!(__erst_buffer, \"{}\")?;", pair.as_str()));
+                buffer
+                    .push_str(&format!("write!(__erst_buffer, r####\"{}\"####)?;", pair.as_str()));
+            }
+            _ => {}
+        }
+    }
+
+    Ok(buffer)
+}
+
+#[cfg(feature = "dynamic")]
+fn parse(path: &str, template: &str, type_: &str) -> Result<String, Box<std::error::Error>> {
+    use erst_shared::{
+        exp::Parser as _,
+        parser::{ErstParser, Rule},
+    };
+
+    let pairs = ErstParser::parse(erst_shared::parser::Rule::template, template)?;
+
+    let mut buffer = String::new();
+
+    for (idx, pair) in pairs.enumerate() {
+        match pair.as_rule() {
+            Rule::code => {
+                let inner = pair.into_inner();
+                buffer.push_str(inner.as_str());
+            }
+            Rule::expr => match type_ {
+                "html" => {
+                    buffer.push_str(&format!(
+                        "write!(__erst_buffer, \"{{}}\", erst::Html({}))?;",
+                        pair.into_inner().as_str()
+                    ));
+                }
+                _ => {
+                    buffer.push_str(&format!(
+                        "write!(__erst_buffer, \"{{}}\", {})?;",
+                        pair.into_inner().as_str()
+                    ));
+                }
+            },
+            Rule::text => {
+                buffer.push_str(&format!(
+                    "write!(__erst_buffer, \"{{}}\", 
+                    erst::dynamic::get(\"{}\", {}).unwrap_or_default())?;",
+                    path, idx
+                ));
             }
             _ => {}
         }

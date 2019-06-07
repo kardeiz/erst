@@ -1,0 +1,11 @@
+[package]
+name = "erst-prepare"
+version = "0.2.1"
+authors = ["Jacob Brown <kardeiz@gmail.com>"]
+edition = "2018"
+
+[features]
+default = ["erst-shared/dynamic"]
+
+[dependencies]
+erst-shared = { path = "../erst-shared", version = "0.2.0" }

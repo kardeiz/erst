@@ -46,3 +46,36 @@ By default, the template's `path` will resolve to a file inside a `templates` di
 Note that, unlike `Askama` and other template systems, you need to reference any struct members with `self`. The template file is basically a function that takes `&self` (where `self` is the linked container object).
 
 Currently, only the `html` type (or none) is supported, with very basic HTML escaping. To unescape HTML content in your template file, wrap the content in `erst::Raw("<p>Hello</p>")`.
+
+##Dynamic
+
+This library also provides a way to avoiding (re-)compiling the string-y parts of your template.
+
+To enable this feature, add the following to your `Cargo.toml`:
+
+```toml
+[dependencies]
+erst = { version = "0.2.1", features = ["dynamic"] }
+
+[build-dependencies]
+erst = { version = "0.2.1", features = ["dynamic"] }
+```
+
+And add a `build.rs` file with the following line:
+
+```rust
+fn main() {
+    erst::shared::utils::rerun_if_templates_changed().unwrap();
+}
+```
+
+And one more step: 
+
+    cargo install erst-prepare
+
+`erst-prepare` is a small binary that copies the code part of your templates to `$XDG_CACHE_HOME` so that the build script can re-run on changes only to the code part of your templates.
+
+Then run your project like:
+
+    erst-prepare --pkg-name <your project> --templates-dir /path/to/your/templates && cargo run
+

@@ -1,12 +1,19 @@
 [package]
 name = "erst-shared"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["Jacob Brown <kardeiz@gmail.com>"]
 edition = "2018"
 readme = "../README.md"
 license = "MIT"
 description = "Embedded Rust"
 
+[features]
+default = []
+dynamic = []
+
 [dependencies]
 pest = "2.1.1"
 pest_derive = "2.1.0"
+syn = { version = "0.15.34", features = ["full"] }
+quote = "0.6.12"
+xdg = "2.2.0"

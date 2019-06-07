@@ -1,6 +1,6 @@
 [package]
 name = "erst-derive"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["Jacob Brown <kardeiz@gmail.com>"]
 edition = "2018"
 readme = "../README.md"
@@ -9,8 +9,13 @@ description = "Embedded Rust"
 [lib]
 proc-macro = true
 
+[features]
+default = []
+dynamic = []
+
 [dependencies]
-syn = { version = "0.15.34", features = ["full"] }
+syn = { version = "0.15.34", features = ["full", "extra-traits"] }
 quote = "0.6.12"
-erst-shared = { path = "../erst-shared", version = "0.2.0" }
+erst-shared = { path = "../erst-shared", version = "0.2.1" }
 proc-macro2 = "0.4.30"
+xdg = "2.2.0"
