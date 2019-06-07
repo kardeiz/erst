@@ -77,5 +77,5 @@ And one more step:
 
 Then run your project like:
 
-    erst-prepare --pkg-name <your project> --templates-dir /path/to/your/templates && cargo run
+    erst-prepare --pkg-name <your project> --templates-dir /path/to/your/templates/dir && cargo run
 
