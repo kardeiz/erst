@@ -55,10 +55,10 @@ To enable this feature, add the following to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-erst = { version = "0.2.1", features = ["dynamic"] }
+erst = { version = "0.2.2", features = ["dynamic"] }
 
 [build-dependencies]
-erst = { version = "0.2.1", features = ["dynamic"] }
+erst = { version = "0.2.2", features = ["dynamic"] }
 ```
 
 And add a `build.rs` file with the following line:
