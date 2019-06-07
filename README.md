@@ -47,7 +47,7 @@ Note that, unlike `Askama` and other template systems, you need to reference any
 
 Currently, only the `html` type (or none) is supported, with very basic HTML escaping. To unescape HTML content in your template file, wrap the content in `erst::Raw("<p>Hello</p>")`.
 
-##Dynamic
+## Dynamic
 
 This library also provides a way to avoiding (re-)compiling the string-y parts of your template.
 
