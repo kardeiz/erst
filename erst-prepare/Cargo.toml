@@ -1,11 +1,15 @@
 [package]
 name = "erst-prepare"
-version = "0.2.1"
+version = "0.2.2"
 authors = ["Jacob Brown <kardeiz@gmail.com>"]
 edition = "2018"
+readme = "../README.md"
+license = "MIT"
+description = "Embedded Rust"
+repository = "https://github.com/kardeiz/erst"
 
 [features]
 default = ["erst-shared/dynamic"]
 
 [dependencies]
-erst-shared = { path = "../erst-shared", version = "0.2.0" }
+erst-shared = { path = "../erst-shared", version = "0.2.2" }
