@@ -55,17 +55,17 @@ To enable this feature, add the following to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-erst = { version = "0.2.2", features = ["dynamic"] }
+erst = { version = "0.2", features = ["dynamic"] }
 
 [build-dependencies]
-erst = { version = "0.2.2", features = ["dynamic"] }
+erst = { version = "0.2", features = ["dynamic"] }
 ```
 
 And add a `build.rs` file with the following line:
 
 ```rust
 fn main() {
-    erst::shared::utils::rerun_if_templates_changed().unwrap();
+    erst::shared::dynamic::rerun_if_templates_changed().unwrap();
 }
 ```
 

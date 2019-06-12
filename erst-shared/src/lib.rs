@@ -10,21 +10,27 @@ pub mod parser {
 }
 
 pub mod exp {
+    pub use bstr::{BString, B};
     pub use pest::Parser;
 }
 
 pub mod utils {
 
-    use std::path::{Path, PathBuf};
+    use std::path::PathBuf;
 
     pub fn templates_dir() -> Result<PathBuf, std::env::VarError> {
         let out = std::env::var("ERST_TEMPLATES_DIR").map(PathBuf::from).or_else(|_| {
             std::env::var("CARGO_MANIFEST_DIR").map(|x| PathBuf::from(x).join("templates"))
-        })?;
+        }).unwrap_or_else(|_| PathBuf::from("templates"));
         Ok(out)
     }
+}
 
-    #[cfg(feature = "dynamic")]
+#[cfg(feature = "dynamic")]
+pub mod dynamic {
+
+    use std::path::{Path, PathBuf};
+    
     pub fn generate_code_cache() -> Result<(), Box<std::error::Error>> {
         let pkg_name = std::env::var("CARGO_PKG_NAME")?;
         let xdg_dirs = xdg::BaseDirectories::with_prefix(format!("erst/{}", &pkg_name))?;
@@ -46,7 +52,6 @@ pub mod utils {
         Ok(())
     }
 
-    #[cfg(feature = "dynamic")]
     pub fn rerun_if_templates_changed() -> Result<(), Box<std::error::Error>> {
         let pkg_name = std::env::var("CARGO_PKG_NAME")?;
         let cache_dir =
@@ -78,7 +83,7 @@ pub mod utils {
     }
 
     fn template_paths() -> Vec<PathBuf> {
-        templates_dir().as_ref().map(collect_paths).unwrap_or_else(|_| Vec::new())
+        super::utils::templates_dir().as_ref().map(collect_paths).unwrap_or_else(|_| Vec::new())
     }
 
     fn get_template_code(path: impl AsRef<Path>) -> Result<String, Box<std::error::Error>> {
@@ -114,5 +119,4 @@ pub mod utils {
 
         Ok(quote!(#(#stmts)*).to_string())
     }
-
 }

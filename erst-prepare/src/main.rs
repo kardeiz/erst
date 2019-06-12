@@ -26,13 +26,25 @@ fn main() -> Result<(), Box<std::error::Error>> {
     if let Some(Some(pkg_name)) = pkg_name {
         std::env::set_var("CARGO_PKG_NAME", pkg_name);
     } else {
-        return Err("Missing --pkg-name argument to erst-prepare".into());
+        if let Ok(cargo_toml_str) = std::fs::read_to_string("Cargo.toml") {
+            if let Ok(cargo_toml) = cargo_toml_str.parse::<toml::Value>() {
+                if let Some(pkg_name) = cargo_toml["package"]["name"].as_str() {
+                    std::env::set_var("CARGO_PKG_NAME", pkg_name);
+                }
+            }
+        }
+
+        if std::env::var("CARGO_PKG_NAME").is_err() {            
+            return Err("Missing --pkg-name argument to erst-prepare".into());
+        }
     }
 
     if let Some(Some(templates_dir)) = templates_dir {
         std::env::set_var("ERST_TEMPLATES_DIR", templates_dir);
     } else {
-        return Err("Missing --templates-dir argument to erst-prepare".into());
+        if erst_shared::utils::templates_dir().is_err() {
+            return Err("Missing --templates-dir argument to erst-prepare".into());
+        }
     }
 
     erst_shared::utils::generate_code_cache()?;

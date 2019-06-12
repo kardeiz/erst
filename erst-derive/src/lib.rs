@@ -8,8 +8,6 @@ extern crate syn;
 
 use proc_macro::TokenStream;
 
-use std::path::{Path, PathBuf};
-
 #[proc_macro_derive(Template, attributes(template))]
 pub fn template_derive(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as syn::DeriveInput);
@@ -63,7 +61,7 @@ fn template_derive_inner(input: syn::DeriveInput) -> Result<TokenStream, Box<std
 
     let body = std::fs::read_to_string(&full_path)?;
 
-    let body = parse(&full_path.display().to_string(), &body, type_)?;
+    let (body, size_hint) = parse(&full_path.display().to_string(), &body, type_)?;
 
     let body = format!("{{ {} }}", body);
 
@@ -88,16 +86,17 @@ fn template_derive_inner(input: syn::DeriveInput) -> Result<TokenStream, Box<std
 
         impl #impl_generics erst::Template for #name #ty_generics #where_clause {
             fn render_into(&self, writer: &mut std::fmt::Write) -> std::fmt::Result {
-                use std::fmt::Write;
                 let __erst_buffer = writer;
                 #(#stmts)*
                 Ok(())
             }
+
+            fn size_hint() -> usize { #size_hint }
         }
 
         impl #impl_generics std::fmt::Display for #name #ty_generics #where_clause {
             fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-                erst::Template::render_into(self, f).map_err(|_| std::fmt::Error {})
+                erst::Template::render_into(self, f)
             }
         }
     };
@@ -106,7 +105,7 @@ fn template_derive_inner(input: syn::DeriveInput) -> Result<TokenStream, Box<std
 }
 
 #[cfg(not(feature = "dynamic"))]
-fn parse(_: &str, template: &str, type_: &str) -> Result<String, Box<std::error::Error>> {
+fn parse(_: &str, template: &str, type_: &str) -> Result<(String, usize), Box<std::error::Error>> {
     use erst_shared::{
         exp::Parser as _,
         parser::{ErstParser, Rule},
@@ -115,6 +114,7 @@ fn parse(_: &str, template: &str, type_: &str) -> Result<String, Box<std::error:
     let pairs = ErstParser::parse(erst_shared::parser::Rule::template, template)?;
 
     let mut buffer = String::new();
+    let mut size_hint = 0;
 
     for pair in pairs {
         match pair.as_rule() {
@@ -122,21 +122,25 @@ fn parse(_: &str, template: &str, type_: &str) -> Result<String, Box<std::error:
                 let inner = pair.into_inner();
                 buffer.push_str(inner.as_str());
             }
-            Rule::expr => match type_ {
-                "html" => {
-                    buffer.push_str(&format!(
-                        "write!(__erst_buffer, \"{{}}\", erst::Html({}))?;",
-                        pair.into_inner().as_str()
-                    ));
+            Rule::expr => {
+                size_hint += 48;
+                match type_ {
+                    "html" => {
+                        buffer.push_str(&format!(
+                            "write!(__erst_buffer, \"{{}}\", erst::Html({}))?;",
+                            pair.into_inner().as_str()
+                        ));
+                    }
+                    _ => {
+                        buffer.push_str(&format!(
+                            "write!(__erst_buffer, \"{{}}\", {})?;",
+                            pair.into_inner().as_str()
+                        ));
+                    }
                 }
-                _ => {
-                    buffer.push_str(&format!(
-                        "write!(__erst_buffer, \"{{}}\", {})?;",
-                        pair.into_inner().as_str()
-                    ));
-                }
-            },
+            }
             Rule::text => {
+                size_hint += pair.as_str().len();
                 buffer
                     .push_str(&format!("write!(__erst_buffer, r####\"{}\"####)?;", pair.as_str()));
             }
@@ -144,11 +148,15 @@ fn parse(_: &str, template: &str, type_: &str) -> Result<String, Box<std::error:
         }
     }
 
-    Ok(buffer)
+    Ok((buffer, size_hint))
 }
 
 #[cfg(feature = "dynamic")]
-fn parse(path: &str, template: &str, type_: &str) -> Result<String, Box<std::error::Error>> {
+fn parse(
+    path: &str,
+    template: &str,
+    type_: &str,
+) -> Result<(String, usize), Box<std::error::Error>> {
     use erst_shared::{
         exp::Parser as _,
         parser::{ErstParser, Rule},
@@ -189,5 +197,5 @@ fn parse(path: &str, template: &str, type_: &str) -> Result<String, Box<std::err
         }
     }
 
-    Ok(buffer)
+    Ok((buffer, 1000))
 }

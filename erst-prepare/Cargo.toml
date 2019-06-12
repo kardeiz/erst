@@ -1,6 +1,6 @@
 [package]
 name = "erst-prepare"
-version = "0.2.2"
+version = "0.2.3"
 authors = ["Jacob Brown <kardeiz@gmail.com>"]
 edition = "2018"
 readme = "../README.md"
@@ -12,4 +12,5 @@ repository = "https://github.com/kardeiz/erst"
 default = ["erst-shared/dynamic"]
 
 [dependencies]
-erst-shared = { path = "../erst-shared", version = "0.2.2" }
+erst-shared = { path = "../erst-shared", version = "0.2" }
+toml = "0.5.1"
