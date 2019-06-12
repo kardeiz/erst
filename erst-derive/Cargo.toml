@@ -20,4 +20,3 @@ syn = { version = "0.15.34", features = ["full", "extra-traits"] }
 quote = "0.6.12"
 erst-shared = { path = "../erst-shared", version = "0.2" }
 proc-macro2 = "0.4.30"
-xdg = "2.2.0"

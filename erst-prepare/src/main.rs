@@ -41,13 +41,11 @@ fn main() -> Result<(), Box<std::error::Error>> {
 
     if let Some(Some(templates_dir)) = templates_dir {
         std::env::set_var("ERST_TEMPLATES_DIR", templates_dir);
-    } else {
-        if erst_shared::utils::templates_dir().is_err() {
-            return Err("Missing --templates-dir argument to erst-prepare".into());
-        }
+    } else if erst_shared::utils::templates_dir().is_err() {
+        return Err("Missing --templates-dir argument to erst-prepare".into());
     }
 
-    erst_shared::utils::generate_code_cache()?;
+    erst_shared::dynamic::generate_code_cache()?;
 
     Ok(())
 }

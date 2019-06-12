@@ -128,7 +128,7 @@ pub mod dynamic {
         None
     }
 
-    fn parse(path: &str) -> Result<HashMap<usize, String>, Box<std::error::Error>> {
+    fn parse(path: &str) -> erst_shared::err::Result<HashMap<usize, String>> {
         use erst_shared::{
             exp::Parser as _,
             parser::{ErstParser, Rule},
@@ -136,7 +136,8 @@ pub mod dynamic {
 
         let template = std::fs::read_to_string(&path)?;
 
-        let pairs = ErstParser::parse(Rule::template, &template)?;
+        let pairs = ErstParser::parse(Rule::template, &template)
+            .map_err(|e| erst_shared::err::Error::Parse(e.to_string()) )?;
 
         let mut map = HashMap::new();
 

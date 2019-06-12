@@ -19,3 +19,4 @@ syn = { version = "0.15.34", features = ["full"] }
 quote = "0.6.12"
 xdg = { version = "2.2.0", optional = true }
 bstr = "0.1.4"
+derive_more = "0.15.0"
