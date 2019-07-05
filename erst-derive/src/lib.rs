@@ -142,7 +142,8 @@ fn parse(_: &str, template: &str, type_: &str) -> Result<(String, usize), Box<st
             Rule::text => {
                 size_hint += pair.as_str().len();
                 buffer
-                    .push_str(&format!("write!(__erst_buffer, r####\"{}\"####)?;", pair.as_str()));
+                    .push_str(&format!("write!(__erst_buffer, r####\"{}\"####)?;", 
+                        pair.as_str().replace('{', "{{").replace('}', "}}")));
             }
             _ => {}
         }
