@@ -65,7 +65,7 @@ And add a `build.rs` file with the following line:
 
 ```rust
 fn main() {
-    erst::dynamic::rerun_if_templates_changed().unwrap();
+    erst::rerun_if_templates_changed().unwrap();
 }
 ```
 

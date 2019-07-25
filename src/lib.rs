@@ -97,6 +97,16 @@ where
 }
 
 #[cfg(feature = "dynamic")]
+pub fn rerun_if_templates_changed() ->  erst_shared::err::Result<()> {
+    crate::dynamic::rerun_if_templates_changed()
+}
+
+#[cfg(not(feature = "dynamic"))]
+pub fn rerun_if_templates_changed() ->  erst_shared::err::Result<()> {
+    Ok(())
+}
+
+#[cfg(feature = "dynamic")]
 pub mod dynamic {
 
     pub use erst_shared::dynamic::*;
