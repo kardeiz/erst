@@ -6,10 +6,9 @@ pub mod err {
     #[derive(Debug, derive_more::From, derive_more::Display)]
     pub enum Error {
         EnvVar(std::env::VarError),
-        Syn(syn::Error),
         Parse(String),
         Msg(Msg),
-        Io(std::io::Error)
+        Io(std::io::Error),
     }
 
     #[derive(Debug, derive_more::Display)]
@@ -22,10 +21,10 @@ pub mod err {
     }
 
     impl std::error::Error for Error {
-        fn source(&self) -> Option<&(dyn std::error::Error + 'static)> { 
+        fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
             match *self {
                 Error::EnvVar(ref inner) => Some(inner),
-                _ => None
+                _ => None,
             }
         }
     }
@@ -49,9 +48,12 @@ pub mod utils {
     use std::path::PathBuf;
 
     pub fn templates_dir() -> crate::err::Result<PathBuf> {
-        let out = std::env::var("ERST_TEMPLATES_DIR").map(PathBuf::from).or_else(|_| {
-            std::env::var("CARGO_MANIFEST_DIR").map(|x| PathBuf::from(x).join("templates"))
-        }).unwrap_or_else(|_| PathBuf::from("templates"));
+        let out = std::env::var("ERST_TEMPLATES_DIR")
+            .map(PathBuf::from)
+            .or_else(|_| {
+                std::env::var("CARGO_MANIFEST_DIR").map(|x| PathBuf::from(x).join("templates"))
+            })
+            .unwrap_or_else(|_| PathBuf::from("templates"));
         Ok(out)
     }
 }
@@ -60,14 +62,15 @@ pub mod utils {
 pub mod dynamic {
 
     use std::path::{Path, PathBuf};
-    
+
     pub fn generate_code_cache() -> crate::err::Result<()> {
         let pkg_name = std::env::var("CARGO_PKG_NAME")?;
         let xdg_dirs = xdg::BaseDirectories::with_prefix(format!("erst/{}", &pkg_name))
             .map_err(crate::err::Error::msg)?;
 
         for path in template_paths() {
-            let path_name = path.file_name().ok_or_else(|| crate::err::Error::msg("No file name"))?;
+            let path_name =
+                path.file_name().ok_or_else(|| crate::err::Error::msg("No file name"))?;
             let cache_file_path = xdg_dirs.place_cache_file(path_name)?;
             let template_code = get_template_code(&path)?;
 
@@ -83,7 +86,7 @@ pub mod dynamic {
         Ok(())
     }
 
-    pub fn rerun_if_templates_changed() ->  crate::err::Result<()> {
+    pub fn rerun_if_templates_changed() -> crate::err::Result<()> {
         let pkg_name = std::env::var("CARGO_PKG_NAME")?;
         let cache_dir = xdg::BaseDirectories::with_prefix(format!("erst/{}", &pkg_name))
             .map_err(crate::err::Error::msg)?
@@ -129,7 +132,7 @@ pub mod dynamic {
         let mut buffer = String::from("{");
 
         let pairs = ErstParser::parse(Rule::template, &template)
-            .map_err(|e| crate::err::Error::Parse(e.to_string()) )?;
+            .map_err(|e| crate::err::Error::Parse(e.to_string()))?;
 
         for pair in pairs {
             match pair.as_rule() {
@@ -146,7 +149,7 @@ pub mod dynamic {
 
         buffer.push_str("}");
 
-        let block = syn::parse_str::<syn::Block>(&buffer)?;
+        let block = syn::parse_str::<syn::Block>(&buffer).map_err(crate::err::Error::msg)?;
 
         let stmts = &block.stmts;
 

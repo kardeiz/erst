@@ -34,7 +34,7 @@ fn main() -> Result<(), Box<std::error::Error>> {
             }
         }
 
-        if std::env::var("CARGO_PKG_NAME").is_err() {            
+        if std::env::var("CARGO_PKG_NAME").is_err() {
             return Err("Missing --pkg-name argument to erst-prepare".into());
         }
     }

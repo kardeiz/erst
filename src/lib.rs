@@ -35,13 +35,14 @@ impl HtmlWriter<'_, '_> {
 
 impl std::io::Write for HtmlWriter<'_, '_> {
     fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
-        
         use std::io::{Error, ErrorKind};
 
         let mut from = 0;
 
         for (idx, byte) in bytes.into_iter().enumerate() {
-            if byte < &b'"' || byte > &b'>' { continue; }
+            if byte < &b'"' || byte > &b'>' {
+                continue;
+            }
 
             let rep_opt = match byte {
                 b'<' => Some("&lt;"),
@@ -50,7 +51,7 @@ impl std::io::Write for HtmlWriter<'_, '_> {
                 b'"' => Some("&quot;"),
                 b'\'' => Some("&#x27;"),
                 b'/' => Some("&#x2f;"),
-                _ => { None }
+                _ => None,
             };
 
             if let Some(rep) = rep_opt {
@@ -58,7 +59,6 @@ impl std::io::Write for HtmlWriter<'_, '_> {
                 self.0.write_str(rep).map_err(|e| Error::new(ErrorKind::Other, e))?;
                 from = idx + 1;
             }
-
         }
 
         let bytes_len = bytes.len();
@@ -95,12 +95,12 @@ where
 }
 
 #[cfg(feature = "dynamic")]
-pub fn rerun_if_templates_changed() ->  erst_shared::err::Result<()> {
+pub fn rerun_if_templates_changed() -> erst_shared::err::Result<()> {
     dynamic::rerun_if_templates_changed()
 }
 
 #[cfg(not(feature = "dynamic"))]
-pub fn rerun_if_templates_changed() ->  erst_shared::err::Result<()> {
+pub fn rerun_if_templates_changed() -> erst_shared::err::Result<()> {
     Ok(())
 }
 
@@ -145,7 +145,7 @@ pub mod dynamic {
         let template = std::fs::read_to_string(&path)?;
 
         let pairs = ErstParser::parse(Rule::template, &template)
-            .map_err(|e| erst_shared::err::Error::Parse(e.to_string()) )?;
+            .map_err(|e| erst_shared::err::Error::Parse(e.to_string()))?;
 
         let mut map = HashMap::new();
 

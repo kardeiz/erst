@@ -131,25 +131,25 @@ fn parse(_: &str, template: &str, type_: &str) -> Result<String, Box<std::error:
                 let inner = pair.into_inner();
                 buffer.push_str(inner.as_str());
             }
-            Rule::expr => {
-                match type_ {
-                    "html" => {
-                        buffer.push_str(&format!(
-                            "write!(__erst_buffer, \"{{}}\", erst::Html({}))?;",
-                            pair.into_inner().as_str()
-                        ));
-                    }
-                    _ => {
-                        buffer.push_str(&format!(
-                            "write!(__erst_buffer, \"{{}}\", {})?;",
-                            pair.into_inner().as_str()
-                        ));
-                    }
+            Rule::expr => match type_ {
+                "html" => {
+                    buffer.push_str(&format!(
+                        "write!(__erst_buffer, \"{{}}\", erst::Html({}))?;",
+                        pair.into_inner().as_str()
+                    ));
                 }
-            }
+                _ => {
+                    buffer.push_str(&format!(
+                        "write!(__erst_buffer, \"{{}}\", {})?;",
+                        pair.into_inner().as_str()
+                    ));
+                }
+            },
             Rule::text => {
-                buffer
-                    .push_str(&format!("__erst_buffer.write_str(r####\"{}\"####)?;", pair.as_str()));
+                buffer.push_str(&format!(
+                    "__erst_buffer.write_str(r####\"{}\"####)?;",
+                    pair.as_str()
+                ));
             }
             _ => {}
         }
@@ -159,11 +159,7 @@ fn parse(_: &str, template: &str, type_: &str) -> Result<String, Box<std::error:
 }
 
 #[cfg(feature = "dynamic")]
-fn parse(
-    path: &str,
-    template: &str,
-    type_: &str,
-) -> Result<String, Box<std::error::Error>> {
+fn parse(path: &str, template: &str, type_: &str) -> Result<String, Box<std::error::Error>> {
     use erst_shared::{
         exp::Parser as _,
         parser::{ErstParser, Rule},
