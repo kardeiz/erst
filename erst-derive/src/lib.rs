@@ -95,7 +95,7 @@ fn template_derive_inner(input: syn::DeriveInput) -> Result<TokenStream, Box<std
         #template_marker
 
         impl #impl_generics erst::Template for #name #ty_generics #where_clause {
-            fn render_into(&self, writer: &mut std::fmt::Write) -> std::fmt::Result {
+            fn render_into(&self, writer: &mut std::io::Write) -> std::io::Result<()> {
                 let __erst_buffer = writer;
                 #(#stmts)*
                 Ok(())
@@ -106,6 +106,10 @@ fn template_derive_inner(input: syn::DeriveInput) -> Result<TokenStream, Box<std
 
         impl #impl_generics std::fmt::Display for #name #ty_generics #where_clause {
             fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+                pub struct Writer<W: std::fmt::Write>(W);
+
+                
+
                 erst::Template::render_into(self, f)
             }
         }
