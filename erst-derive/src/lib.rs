@@ -7,6 +7,7 @@ extern crate quote;
 extern crate syn;
 
 use proc_macro::TokenStream;
+use std::convert::TryFrom;
 
 #[proc_macro_derive(Template, attributes(template))]
 pub fn template_derive(input: TokenStream) -> TokenStream {
@@ -20,6 +21,7 @@ fn template_derive_inner(input: syn::DeriveInput) -> Result<TokenStream, Box<std
 
     let mut path = None;
     let mut type_ = None;
+    let mut size_hint = None;
 
     for pair in input
         .attrs
@@ -51,9 +53,17 @@ fn template_derive_inner(input: syn::DeriveInput) -> Result<TokenStream, Box<std
                 type_ = Some(s.value());
             }
         }
+
+        if pair.ident == "size_hint" {
+            if let syn::Lit::Int(i) = pair.lit {
+                size_hint = Some(i.value());
+            }
+        }
     }
 
     let type_ = type_.as_ref().map(|x| x.as_str()).unwrap_or_else(|| "");
+
+    let size_hint: usize = size_hint.and_then(|x| usize::try_from(x).ok()).unwrap_or(1024);
 
     let path = path.ok_or_else(|| "No path given")?;
 
@@ -61,7 +71,7 @@ fn template_derive_inner(input: syn::DeriveInput) -> Result<TokenStream, Box<std
 
     let body = std::fs::read_to_string(&full_path)?;
 
-    let (body, size_hint) = parse(&full_path.display().to_string(), &body, type_)?;
+    let body = parse(&full_path.display().to_string(), &body, type_)?;
 
     let body = format!("{{ {} }}", body);
 
@@ -105,7 +115,7 @@ fn template_derive_inner(input: syn::DeriveInput) -> Result<TokenStream, Box<std
 }
 
 #[cfg(not(feature = "dynamic"))]
-fn parse(_: &str, template: &str, type_: &str) -> Result<(String, usize), Box<std::error::Error>> {
+fn parse(_: &str, template: &str, type_: &str) -> Result<String, Box<std::error::Error>> {
     use erst_shared::{
         exp::Parser as _,
         parser::{ErstParser, Rule},
@@ -114,7 +124,6 @@ fn parse(_: &str, template: &str, type_: &str) -> Result<(String, usize), Box<st
     let pairs = ErstParser::parse(erst_shared::parser::Rule::template, template)?;
 
     let mut buffer = String::new();
-    let mut size_hint = 0;
 
     for pair in pairs {
         match pair.as_rule() {
@@ -123,7 +132,6 @@ fn parse(_: &str, template: &str, type_: &str) -> Result<(String, usize), Box<st
                 buffer.push_str(inner.as_str());
             }
             Rule::expr => {
-                size_hint += 48;
                 match type_ {
                     "html" => {
                         buffer.push_str(&format!(
@@ -140,16 +148,14 @@ fn parse(_: &str, template: &str, type_: &str) -> Result<(String, usize), Box<st
                 }
             }
             Rule::text => {
-                size_hint += pair.as_str().len();
                 buffer
-                    .push_str(&format!("write!(__erst_buffer, r####\"{}\"####)?;", 
-                        pair.as_str().replace('{', "{{").replace('}', "}}")));
+                    .push_str(&format!("__erst_buffer.write_str(r####\"{}\"####)?;", pair.as_str()));
             }
             _ => {}
         }
     }
 
-    Ok((buffer, size_hint))
+    Ok(buffer)
 }
 
 #[cfg(feature = "dynamic")]
@@ -157,7 +163,7 @@ fn parse(
     path: &str,
     template: &str,
     type_: &str,
-) -> Result<(String, usize), Box<std::error::Error>> {
+) -> Result<String, Box<std::error::Error>> {
     use erst_shared::{
         exp::Parser as _,
         parser::{ErstParser, Rule},
@@ -198,5 +204,5 @@ fn parse(
         }
     }
 
-    Ok((buffer, 1000))
+    Ok(buffer)
 }
