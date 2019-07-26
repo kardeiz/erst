@@ -3,14 +3,14 @@ pub use erst_derive::Template;
 use std::fmt::{Display, Write};
 
 pub trait Template {
-    fn render_into(&self, writer: &mut std::io::Write) -> std::io::Result<()>;
+    fn render_into(&self, writer: &mut std::fmt::Write) -> std::fmt::Result;
 
     fn size_hint() -> usize;
 
-    fn render(&self) -> Result<String, std::io::Error> {
-        let mut buffer = Vec::with_capacity(Self::size_hint());
+    fn render(&self) -> Result<String, std::fmt::Error> {
+        let mut buffer = String::with_capacity(Self::size_hint());
         self.render_into(&mut buffer)?;
-        Ok(String::from_utf8(buffer).unwrap())
+        Ok(buffer)
     }
 }
 
