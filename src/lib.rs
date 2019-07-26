@@ -35,37 +35,35 @@ impl HtmlWriter<'_, '_> {
 
 impl std::io::Write for HtmlWriter<'_, '_> {
     fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
+        
+        use std::io::{Error, ErrorKind};
+
+        let mut from = 0;
+
+        for (idx, byte) in bytes.into_iter().enumerate() {
+            if byte < &b'"' || byte > &b'>' { continue; }
+
+            let rep_opt = match byte {
+                b'<' => Some("&lt;"),
+                b'>' => Some("&gt;"),
+                b'&' => Some("&amp;"),
+                b'"' => Some("&quot;"),
+                b'\'' => Some("&#x27;"),
+                b'/' => Some("&#x2f;"),
+                _ => { None }
+            };
+
+            if let Some(rep) = rep_opt {
+                self.write_slice(&bytes[from..idx]).map_err(|e| Error::new(ErrorKind::Other, e))?;
+                self.0.write_str(rep).map_err(|e| Error::new(ErrorKind::Other, e))?;
+                from = idx + 1;
+            }
+
+        }
+
         let bytes_len = bytes.len();
-        let mut frm = 0;
 
-        let mut escape = |frm: &mut usize, to: usize, rep| -> std::io::Result<()> {
-            if *frm < to {
-                self.write_slice(&bytes[*frm..to])
-                    .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?;
-            }
-            self.0
-                .write_str(rep)
-                .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?;
-            *frm = to + 1;
-            Ok(())
-        };
-
-        for (idx, byte) in bytes.iter().enumerate() {
-            match byte {
-                b'<' => escape(&mut frm, idx, "&lt;")?,
-                b'>' => escape(&mut frm, idx, "&gt;")?,
-                b'&' => escape(&mut frm, idx, "&amp;")?,
-                b'"' => escape(&mut frm, idx, "&quot;")?,
-                b'\'' => escape(&mut frm, idx, "&#x27;")?,
-                b'/' => escape(&mut frm, idx, "&#x2f;")?,
-                _ => {}
-            }
-        }
-
-        if frm < bytes_len {
-            self.write_slice(&bytes[frm..bytes_len])
-                .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?;
-        }
+        self.write_slice(&bytes[from..bytes_len]).map_err(|e| Error::new(ErrorKind::Other, e))?;
 
         Ok(bytes_len)
     }
