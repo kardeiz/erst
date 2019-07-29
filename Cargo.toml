@@ -1,12 +1,13 @@
 [package]
 name = "erst"
-version = "0.2.5"
+version = "0.2.6"
 authors = ["Jacob Brown <kardeiz@gmail.com>"]
 edition = "2018"
 readme = "README.md"
 license = "MIT"
 description = "Embedded Rust"
 repository = "https://github.com/kardeiz/erst"
+documentation = "https://docs.rs/erst"
 
 [features]
 default = []

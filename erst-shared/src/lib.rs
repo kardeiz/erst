@@ -24,6 +24,7 @@ pub mod err {
         fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
             match *self {
                 Error::EnvVar(ref inner) => Some(inner),
+                Error::Io(ref inner) => Some(inner),
                 _ => None,
             }
         }
