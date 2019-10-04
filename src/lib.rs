@@ -71,16 +71,6 @@ erst = { version = "0.2", features = ["dynamic"] }
 erst = { version = "0.2", features = ["dynamic"] }
 ```
 
-And add a `build.rs` file with the following line:
-
-```rust
-fn main() {
-    // This function is a no-op when the `dynamic` feature is not enabled.
-    // It is safe to leave this in `build.rs` even when not using `dynamic`
-    erst::rerun_if_templates_changed().unwrap();
-}
-```
-
 You must also install a helper binary, [erst-prepare](https://crates.io/crates/erst-prepare):
 
 ```
@@ -112,7 +102,7 @@ use std::fmt::{Display, Write};
 
 /// The rendering trait derived by the proc macro
 pub trait Template {
-    fn render_into(&self, writer: &mut std::fmt::Write) -> std::fmt::Result;
+    fn render_into(&self, writer: &mut dyn std::fmt::Write) -> std::fmt::Result;
 
     fn size_hint() -> usize;
 
@@ -204,24 +194,6 @@ where
         let Html(Raw(ref inner)) = *self;
         inner.fmt(f)
     }
-}
-
-/// Creates a code cache for templates in `$XDG_CACHE_HOME` when using `dynamic`, to
-/// indicate when code needs to be re-compiled.
-///
-/// Is a no-op when `dynamic` is not enabled, and is safe to leave in `build.rs`.
-#[cfg(feature = "dynamic")]
-pub fn rerun_if_templates_changed() -> erst_shared::err::Result<()> {
-    erst_shared::dynamic::rerun_if_templates_changed()
-}
-
-/// Creates a code cache for templates in `$XDG_CACHE_HOME` when using `dynamic`, to
-/// indicate when code needs to be re-compiled.
-///
-/// Is a no-op when `dynamic` is not enabled, and is safe to leave in `build.rs`.
-#[cfg(not(feature = "dynamic"))]
-pub fn rerun_if_templates_changed() -> erst_shared::err::Result<()> {
-    Ok(())
 }
 
 #[doc(hidden)]

@@ -87,17 +87,18 @@ pub mod dynamic {
         Ok(())
     }
 
-    pub fn rerun_if_templates_changed() -> crate::err::Result<()> {
-        let pkg_name = std::env::var("CARGO_PKG_NAME")?;
-        let cache_dir = xdg::BaseDirectories::with_prefix(format!("erst/{}", &pkg_name))
-            .map_err(crate::err::Error::msg)?
-            .get_cache_home();
+    pub fn get_code_cache_path(path: impl AsRef<Path>) -> Option<PathBuf> {
+        fn inner(path: impl AsRef<Path>) -> crate::err::Result<Option<PathBuf>> {
+            let pkg_name = std::env::var("CARGO_PKG_NAME")?;
+            let xdg_dirs = xdg::BaseDirectories::with_prefix(format!("erst/{}", &pkg_name))
+                .map_err(crate::err::Error::msg)?;
+            let path_as_ref = path.as_ref();
+            let path_name =
+                path_as_ref.file_name().ok_or_else(|| crate::err::Error::msg("No file name"))?;
 
-        for path in collect_paths(&cache_dir) {
-            println!("cargo:rerun-if-changed={}", path.display());
+            Ok(xdg_dirs.find_cache_file(&path_name))
         }
-
-        Ok(())
+        inner(path).ok().and_then(|x| x)
     }
 
     fn collect_paths(path: impl AsRef<Path>) -> Vec<PathBuf> {

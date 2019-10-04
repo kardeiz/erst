@@ -1,5 +1,8 @@
 # erst
 
+[![Docs](https://docs.rs/erst/badge.svg)](https://docs.rs/crate/erst/)
+[![Crates.io](https://img.shields.io/crates/v/erst.svg)](https://crates.io/crates/erst)
+
 A small library for creating string templates, similar to [eRuby](https://ruby-doc.org/stdlib/libdoc/erb/rdoc/ERB.html)
 and [JSP](https://en.wikipedia.org/wiki/JavaServer_Pages) (uses angle-bracket-percent tags: `<%= expr %>`).
 
@@ -72,16 +75,6 @@ erst = { version = "0.2", features = ["dynamic"] }
 erst = { version = "0.2", features = ["dynamic"] }
 ```
 
-And add a `build.rs` file with the following line:
-
-```rust
-fn main() {
-    // This function is a no-op when the `dynamic` feature is not enabled.
-    // It is safe to leave this in `build.rs` even when not using `dynamic`
-    erst::rerun_if_templates_changed().unwrap();
-}
-```
-
 You must also install a helper binary, [erst-prepare](https://crates.io/crates/erst-prepare):
 
 ```rust
@@ -105,5 +98,7 @@ erst-prepare --pkg-name my-project --templates-dir /path/to/your/templates/dir
 
 If you are using `dynamic` and do not run `erst-prepare` before building, it is possible that
 your templates will not render correctly.
+
+Current version: 0.3.0
 
 License: MIT

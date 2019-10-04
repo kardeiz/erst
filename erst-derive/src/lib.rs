@@ -15,7 +15,7 @@ pub fn template_derive(input: TokenStream) -> TokenStream {
     template_derive_inner(input).unwrap()
 }
 
-fn template_derive_inner(input: syn::DeriveInput) -> Result<TokenStream, Box<std::error::Error>> {
+fn template_derive_inner(input: syn::DeriveInput) -> Result<TokenStream, Box<dyn std::error::Error>> {
     let name = &input.ident;
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
 
@@ -79,8 +79,19 @@ fn template_derive_inner(input: syn::DeriveInput) -> Result<TokenStream, Box<std
 
     let stmts = &block.stmts;
 
-    let template_marker = if cfg!(feature = "dynamic") {
-        quote!()
+    let template_marker = if cfg!(feature = "dynamic") && cfg!(debug_assertions) {    
+        let template_marker = syn::Ident::new(
+            &format!("__ERST_TEMPLATE_MARKER_{}", &name),
+            proc_macro2::Span::call_site(),
+        );
+
+        if let Some(path) = erst_shared::dynamic::get_code_cache_path(&full_path) {
+            let path_display = path.display().to_string();
+            quote!(pub const #template_marker: () = { include_str!(#path_display); };)
+        } else {
+            let path_display = full_path.display().to_string();
+            quote!(pub const #template_marker: () = { include_str!(#path_display); };)
+        }
     } else {
         let path_display = full_path.display().to_string();
         let template_marker = syn::Ident::new(
@@ -92,10 +103,9 @@ fn template_derive_inner(input: syn::DeriveInput) -> Result<TokenStream, Box<std
 
     let out = quote! {
 
-        #template_marker
-
         impl #impl_generics erst::Template for #name #ty_generics #where_clause {
-            fn render_into(&self, writer: &mut std::fmt::Write) -> std::fmt::Result {
+            fn render_into(&self, writer: &mut dyn std::fmt::Write) -> std::fmt::Result {
+                #template_marker
                 let __erst_buffer = writer;
                 #(#stmts)*
                 Ok(())
@@ -114,8 +124,8 @@ fn template_derive_inner(input: syn::DeriveInput) -> Result<TokenStream, Box<std
     Ok(out.into())
 }
 
-#[cfg(not(feature = "dynamic"))]
-fn parse(_: &str, template: &str, type_: &str) -> Result<String, Box<std::error::Error>> {
+#[cfg(any(not(feature = "dynamic"), not(debug_assertions)))]
+fn parse(_: &str, template: &str, type_: &str) -> Result<String, Box<dyn std::error::Error>> {
     use erst_shared::{
         exp::Parser as _,
         parser::{ErstParser, Rule},
@@ -158,8 +168,8 @@ fn parse(_: &str, template: &str, type_: &str) -> Result<String, Box<std::error:
     Ok(buffer)
 }
 
-#[cfg(feature = "dynamic")]
-fn parse(path: &str, template: &str, type_: &str) -> Result<String, Box<std::error::Error>> {
+#[cfg(all(feature = "dynamic", debug_assertions))]
+fn parse(path: &str, template: &str, type_: &str) -> Result<String, Box<dyn std::error::Error>> {
     use erst_shared::{
         exp::Parser as _,
         parser::{ErstParser, Rule},
