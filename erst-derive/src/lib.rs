@@ -79,7 +79,18 @@ fn template_derive_inner(input: syn::DeriveInput) -> Result<TokenStream, Box<dyn
 
     let stmts = &block.stmts;
 
-    let template_marker = if cfg!(feature = "dynamic") && cfg!(debug_assertions) {    
+    #[cfg(any(not(feature = "dynamic"), not(debug_assertions)))]
+    let template_marker = {
+        let path_display = full_path.display().to_string();
+        let template_marker = syn::Ident::new(
+            &format!("__ERST_TEMPLATE_MARKER_{}", &name),
+            proc_macro2::Span::call_site(),
+        );
+        quote!(pub const #template_marker: () = { include_str!(#path_display); };)
+    };
+
+    #[cfg(all(feature = "dynamic", debug_assertions))]
+    let template_marker = {
         let template_marker = syn::Ident::new(
             &format!("__ERST_TEMPLATE_MARKER_{}", &name),
             proc_macro2::Span::call_site(),
@@ -92,13 +103,6 @@ fn template_derive_inner(input: syn::DeriveInput) -> Result<TokenStream, Box<dyn
             let path_display = full_path.display().to_string();
             quote!(pub const #template_marker: () = { include_str!(#path_display); };)
         }
-    } else {
-        let path_display = full_path.display().to_string();
-        let template_marker = syn::Ident::new(
-            &format!("__ERST_TEMPLATE_MARKER_{}", &name),
-            proc_macro2::Span::call_site(),
-        );
-        quote!(pub const #template_marker: () = { include_str!(#path_display); };)
     };
 
     let out = quote! {
